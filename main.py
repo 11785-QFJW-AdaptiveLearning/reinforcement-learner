@@ -11,19 +11,22 @@ from BKT import BKT
 if __name__ == '__main__':
     # env = gym.make('CartPole-v0')
     env = BKT()
-    N = 20
+    N = 50
     batch_size = 5
-    n_epochs = 1
+    n_epochs = 3
     alpha = 0.0003
     agent = Agent(n_actions=env.action_space.n, batch_size=batch_size,
                   alpha=alpha, n_epochs=n_epochs,
                   input_dims=env.observation_space.shape)
-    n_games = 10000
+    n_games = 5000
 
-    figure_file = 'rs_nosweet_penalty_pl=0.1_10000.png'
+    figure_file = 'rs.png'
 
     best_score = -math.inf
     score_history = []
+    post_test_history = []
+    penalty_history = []
+
 
     learn_iters = 0
     avg_score = 0

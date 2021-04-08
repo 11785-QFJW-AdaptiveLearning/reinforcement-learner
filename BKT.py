@@ -61,7 +61,7 @@ class BKT(Env):
         self.state = np.zeros(self.observation_space.shape, dtype=int)
         self.penalty = 0.1
         self.learned_discount = 0.5
-        self.learned_penalty = 2
+        self.learned_penalty = 1.5
         self.learned_sweet = 1
 
     def step(self, action):
@@ -110,7 +110,7 @@ class BKT(Env):
                     # not learned, reduced reward
                     reward = self.learned_discount ** self.assigned_count[idx]
                 else:
-                    if self.assigned_count[idx] >=4:
+                    if self.assigned_count[idx] >= 4:
                         info['stuck'] = action
                     # learned, penalty reward
                     reward = -self.learned_penalty ** self.assigned_count[idx]
