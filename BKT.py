@@ -121,10 +121,17 @@ class BKT(Env):
             # print("post")
             done = True
             postsocres = self.student.takePostTest()
+            info['postscores'] = np.sum(postsocres)
             # self.state[18:18 + len(postsocres)] = postsocres
             prescores = self.state[0:6]
             # reward = 1.0 + np.sum(postsocres - prescores) - (1 + self.penalty) * len(self.assigned)
-            reward = 1.0 + self.learned_sweet * np.sum(np.maximum(postsocres - prescores, 0)) - (1 + self.penalty) * len(self.assigned)
+            # reward = 1.0 + self.learned_sweet * np.sum(np.maximum(postsocres - prescores, 0)) - (1 + self.penalty) * len(self.assigned)
+            if len(self.assigned) > 0:
+                reward = 1.0 \
+                         + self.learned_sweet * np.sum(np.maximum(postsocres - prescores, 0)) \
+                         - (1 + self.penalty) * len(self.assigned)
+            else:
+                reward = -12 + 2 * np.sum(np.minimum(postsocres - prescores, 0))
             print('pre-test:\t', prescores)
             print('post-test:\t', postsocres)
 

@@ -4,12 +4,15 @@ import torch as T
 import torch.nn as nn
 import torch.optim as optim
 from torch.distributions.categorical import Categorical
+
+
 # T.manual_seed(11785)
 
 class PPOMemory:
     """
     use enviroment to load states, actions, done...
     """
+
     def __init__(self, batch_size):
         self.states = []
         self.probs = []
@@ -56,6 +59,7 @@ class ActorNetwork(nn.Module):
     """
     state -> action distribution
     """
+
     def __init__(self, n_actions, input_dims, alpha,
                  fc1_dims=256, fc2_dims=256, chkpt_dir='ppo'):
         super(ActorNetwork, self).__init__()
@@ -63,12 +67,18 @@ class ActorNetwork(nn.Module):
         self.checkpoint_file = os.path.join(chkpt_dir, 'actor_ppo')
         self.actor = nn.Sequential(
             nn.Linear(*input_dims, fc1_dims),
+            nn.Dropout(0.2),
             nn.ReLU(),
             nn.Linear(fc1_dims, fc2_dims),
+            nn.Dropout(0.2),
             nn.ReLU(),
             nn.Linear(fc2_dims, n_actions),
-            nn.Softmax(dim=-1)
+            nn.Sigmoid(),
+            # nn.Softmax(dim=-1)
         )
+        self.softmax = nn.Softmax(dim=-1)
+        self.mask = T.ones(n_actions)
+        self.mask[-1] = -1
 
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
@@ -76,9 +86,19 @@ class ActorNetwork(nn.Module):
 
     def forward(self, state):
         dist = self.actor(state)
+        dist = dist * self.mask + self.mask
+        dist = self.softmax(dist)
         dist = Categorical(dist)
 
         return dist
+
+    def updateMask(self, activity, weight=0):
+        self.mask[activity] -= abs(weight)
+        self.mask[-1] = 1
+        # self.mask[activity] = 0
+
+    def resetMask(self):
+        self.mask = T.ones(len(self.mask))
 
     def save_checkpoint(self):
         T.save(self.state_dict(), self.checkpoint_file)
@@ -91,6 +111,7 @@ class CriticNetwork(nn.Module):
     """
     state -> value
     """
+
     def __init__(self, input_dims, alpha, fc1_dims=256, fc2_dims=256,
                  chkpt_dir='ppo'):
         super(CriticNetwork, self).__init__()
@@ -98,8 +119,10 @@ class CriticNetwork(nn.Module):
         self.checkpoint_file = os.path.join(chkpt_dir, 'critic_ppo')
         self.critic = nn.Sequential(
             nn.Linear(*input_dims, fc1_dims),
+            nn.Dropout(0.2),
             nn.ReLU(),
             nn.Linear(fc1_dims, fc2_dims),
+            nn.Dropout(0.2),
             nn.ReLU(),
             nn.Linear(fc2_dims, 1)
         )
@@ -150,7 +173,8 @@ class Agent:
 
         dist = self.actor(state)
         value = self.critic(state)
-        action = dist.sample()
+        # action = dist.sample()
+        action = T.squeeze(dist.probs).argmax()
 
         probs = T.squeeze(dist.log_prob(action)).item()
         action = T.squeeze(action).item()
@@ -191,7 +215,8 @@ class Agent:
                 prob_ratio = new_probs.exp() / old_probs.exp()
                 # prob_ratio = (new_probs - old_probs).exp()
                 weighted_probs = advantage[batch] * prob_ratio
-                weighted_clipped_probs = T.clamp(prob_ratio, 1 - self.policy_clip, 1 + self.policy_clip) * advantage[batch]
+                weighted_clipped_probs = T.clamp(prob_ratio, 1 - self.policy_clip, 1 + self.policy_clip) * advantage[
+                    batch]
                 actor_loss = -T.min(weighted_probs, weighted_clipped_probs).mean()
 
                 returns = advantage[batch] + values[batch]
@@ -206,3 +231,9 @@ class Agent:
                 self.critic.optimizer.step()
 
         self.memory.clear_memory()
+
+    def resetMask(self):
+        self.actor.resetMask()
+
+    def updateMask(self, action, reward):
+        self.actor.updateMask(action, reward)
