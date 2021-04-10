@@ -24,8 +24,12 @@ def plot_running_curve(x, rewards, postscores, penalty, figure_file):
 
 
 def cal_running_avg(x):
-    running_avg = np.zeros(len(x))
-    for i in range(len(running_avg)):
-        running_avg[i] = np.mean(x[max(0, i - 100):(i + 1)])
-    running_avg = np.maximum(running_avg, -30)
+    # running_avg = np.zeros(len(x))
+    # for i in range(len(running_avg)):
+    #     running_avg[i] = np.mean(x[max(0, i - 100):(i + 1)])
+    # running_avg = np.maximum(running_avg, -30)
+    running_avg = np.zeros(len(x)-99)
+    for i in range(0, len(x)-99):
+        running_avg[i] = np.mean(x[i:i+100])
     return running_avg
+

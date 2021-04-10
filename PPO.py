@@ -81,6 +81,7 @@ class ActorNetwork(nn.Module):
         self.mask[-1] = -1
 
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
+        self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, 100, gamma=0.9)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
         self.to(self.device)
 
@@ -128,6 +129,7 @@ class CriticNetwork(nn.Module):
         )
 
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
+        self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, 100, gamma=0.9)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
         self.to(self.device)
 
@@ -229,6 +231,8 @@ class Agent:
                 total_loss.backward()
                 self.actor.optimizer.step()
                 self.critic.optimizer.step()
+                self.actor.scheduler.step()
+                self.critic.scheduler.step()
 
         self.memory.clear_memory()
 

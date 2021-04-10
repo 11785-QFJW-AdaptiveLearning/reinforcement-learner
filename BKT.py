@@ -59,7 +59,7 @@ class BKT(Env):
         self.assigned = []
         self.assigned_count = []
         self.state = np.zeros(self.observation_space.shape, dtype=int)
-        self.penalty = 0.1
+        self.penalty = 0.2
         self.learned_discount = 0.5
         self.learned_penalty = 1.5
         self.learned_sweet = 1
