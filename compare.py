@@ -1,8 +1,8 @@
 import numpy as np
 from utils import *
 
-linear = np.load('linear_assign_04110225.npy', allow_pickle=True).item()
-rs = np.load('baseline_penalty2_04110231.npy', allow_pickle=True).item()
+linear = np.load('linear_assign_04110312.npy', allow_pickle=True).item()
+rs = np.load('baseline_penalty2_04110317.npy', allow_pickle=True).item()
 
 linear_running_rewards = cal_running_avg(linear['score_history'])
 linear_running_postscores = cal_running_avg(linear['post_test_history'])
@@ -19,4 +19,4 @@ plt.plot(x, rs_running_postscores, color='lightgreen', label='rs post scores')
 plt.plot(x, rs_running_penalty, color='lightcoral', label='rs penalty')
 plt.legend()
 plt.title('Running average of previous 100 data')
-plt.savefig('compare.png')
+plt.savefig('compare04110317.png')

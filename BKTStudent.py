@@ -38,7 +38,7 @@ class BKTStudentSkill:
     def init_p_norm(self):
         low = 0
         high = 1
-        p_L = stats.truncnorm.rvs((low - 0.1) / 0.1, (high - 0.1) / 0.1, loc=0.1, scale=0.1, size=1)
+        p_L = stats.truncnorm.rvs((low - 0.5) / 0.1, (high - 0.5) / 0.1, loc=0.5, scale=0.1, size=1)
         p_T = stats.truncnorm.rvs((low - 0.8) / 0.2, (high - 0.8) / 0.2, loc=0.8, scale=0.2, size=1)
         p_S = stats.truncnorm.rvs((low - 0.05) / 0.1, (high - 0.05) / 0.1, loc=0.05, scale=0.1, size=1)
         p_G = stats.truncnorm.rvs((low - 0.2) / 0.05, (high - 0.2) / 0.05, loc=0.2, scale=0.05, size=1)
