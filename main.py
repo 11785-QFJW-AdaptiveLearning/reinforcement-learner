@@ -21,7 +21,7 @@ if __name__ == '__main__':
     agent = Agent(n_actions=env.action_space.n, batch_size=batch_size,
                   alpha=alpha, n_epochs=n_epochs,
                   input_dims=env.observation_space.shape, layer_size=Agent_layer_size)
-    n_games = 1
+    n_games = 5000
 
     best_score = -math.inf
     score_history = []
@@ -83,7 +83,7 @@ if __name__ == '__main__':
         'score_history': score_history
     }
     bkt_path = '_'.join([str(v) for k, v in BKT_param.items()])
-    ppo_path = '_'.join(map(str, Agent_layer_size))
+    ppo_path = '_'.join(map(str, Agent_layer_size[1:]))
     time = datetime.datetime.now().strftime('%m%d%H%M')
     file_name = f'png/baseline_bkt_{bkt_path}_ppo_{ppo_path}_{time}'
     np.save(f'{file_name}.npy', result)

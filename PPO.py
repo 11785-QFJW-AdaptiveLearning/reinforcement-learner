@@ -60,7 +60,7 @@ class ActorNetwork(nn.Module):
     state -> action distribution
     """
 
-    def __init__(self, n_actions, input_dims, alpha, layer_size, chkpt_dir='ppo'):
+    def __init__(self, n_actions, alpha, layer_size, chkpt_dir='ppo'):
         super(ActorNetwork, self).__init__()
 
         self.checkpoint_file = os.path.join(chkpt_dir, 'actor_ppo')
@@ -76,7 +76,6 @@ class ActorNetwork(nn.Module):
         #     nn.Sigmoid(),
         #     # nn.Softmax(dim=-1)
         # )
-        layer_size.insert(0, input_dims[0])
         layer = []
         for i in range(len(layer_size) - 1):
             layer.append(nn.Linear(layer_size[i], layer_size[i + 1]))
@@ -123,7 +122,7 @@ class CriticNetwork(nn.Module):
     state -> value
     """
 
-    def __init__(self, input_dims, alpha, layer_size, chkpt_dir='ppo'):
+    def __init__(self, alpha, layer_size, chkpt_dir='ppo'):
         super(CriticNetwork, self).__init__()
 
         self.checkpoint_file = os.path.join(chkpt_dir, 'critic_ppo')
@@ -137,7 +136,6 @@ class CriticNetwork(nn.Module):
         #     nn.ReLU(),
         #     nn.Linear(fc2_dims, 1)
         # )
-        layer_size.insert(0, input_dims[0])
         layer = []
         for i in range(len(layer_size) - 1):
             layer.append(nn.Linear(layer_size[i], layer_size[i + 1]))
@@ -170,9 +168,9 @@ class Agent:
         self.policy_clip = policy_clip
         self.n_epochs = n_epochs
         self.gae_lambda = gae_lambda
-
-        self.actor = ActorNetwork(n_actions, input_dims, alpha, layer_size)
-        self.critic = CriticNetwork(input_dims, alpha, layer_size)
+        layer_size.insert(0, input_dims[0])
+        self.actor = ActorNetwork(n_actions, alpha, layer_size)
+        self.critic = CriticNetwork(alpha, layer_size)
         self.memory = PPOMemory(batch_size)
 
     def remember(self, state, action, probs, vals, reward, done):
