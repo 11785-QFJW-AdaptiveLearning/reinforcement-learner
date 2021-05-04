@@ -10,8 +10,9 @@ import datetime
 
 
 if __name__ == '__main__':
-    BKT_param = {'numskill':6, 'activity_per_skill':7, 'pretest_per_skill':3}
-    Agent_param = {}
+    BKT_param = {'numskill':6, 'activity_per_skill':7, 'pretest_per_skill':3,
+                 'penalty':0.1, 'learned_discount':0.5, 'learned_penalty':1.5, 'learned_sweet':1}
+    Agent_layer_size = [256, 256, 128]
     env = BKT(**BKT_param)
     N = 50
     batch_size = 5
@@ -19,10 +20,8 @@ if __name__ == '__main__':
     alpha = 0.0005
     agent = Agent(n_actions=env.action_space.n, batch_size=batch_size,
                   alpha=alpha, n_epochs=n_epochs,
-                  input_dims=env.observation_space.shape)
-    n_games = 5000
-
-    figure_file = 'rs.png'
+                  input_dims=env.observation_space.shape, layer_size=Agent_layer_size)
+    n_games = 1
 
     best_score = -math.inf
     score_history = []
@@ -84,8 +83,9 @@ if __name__ == '__main__':
         'score_history': score_history
     }
     bkt_path = '_'.join([str(v) for k, v in BKT_param.items()])
+    ppo_path = '_'.join(map(str, Agent_layer_size))
     time = datetime.datetime.now().strftime('%m%d%H%M')
-    file_name = f'lpf/baseline_penalty2_bkt_{bkt_path}_{time}'
+    file_name = f'png/baseline_bkt_{bkt_path}_ppo_{ppo_path}_{time}'
     np.save(f'{file_name}.npy', result)
     # plot_learning_curve(x, score_history, figure_file)
     plot_running_curve(x, score_history, post_test_history, penalty_history, f'{file_name}.png')

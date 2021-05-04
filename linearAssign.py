@@ -9,7 +9,8 @@ import datetime
 
 
 if __name__ == '__main__':
-    BKT_param = {'numskill': 6, 'activity_per_skill': 7, 'pretest_per_skill': 3}
+    BKT_param = {'numskill':6, 'activity_per_skill':7, 'pretest_per_skill':3,
+                 'penalty':0.1, 'learned_discount':0.5, 'learned_penalty':1.5, 'learned_sweet':1}
     env = BKT(**BKT_param)
     N = 50
     n_games = 5000
@@ -59,7 +60,7 @@ if __name__ == '__main__':
     }
     bkt_path = '_'.join([str(v) for k, v in BKT_param.items()])
     time = datetime.datetime.now().strftime('%m%d%H%M')
-    file_name = f'lpf/linear_assign_bkt_{bkt_path}_{time}'
+    file_name = f'png/linear_assign_bkt_{bkt_path}_{time}'
     np.save(f'{file_name}.npy', result)
     # plot_learning_curve(x, score_history, figure_file)
     plot_running_curve(x, score_history, post_test_history, penalty_history, f'{file_name}.png')

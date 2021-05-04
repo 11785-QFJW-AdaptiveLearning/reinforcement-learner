@@ -2,9 +2,6 @@ import numpy as np
 from gym import spaces, Env
 from BKTStudent import BKTStudent
 
-# LOW = np.zeros(6 + 12 + 12)  # 6 pre-tests, 12 activities, 12 activities' grads
-# HIGH = np.ones(6 + 12 + 12)
-
 class BKT(Env):
     """
     Description:
@@ -51,7 +48,8 @@ class BKT(Env):
     --------------------------------------------------------
     """
 
-    def __init__(self, numskill, activity_per_skill, pretest_per_skill):
+    def __init__(self, numskill, activity_per_skill, pretest_per_skill,
+                 penalty, learned_discount, learned_penalty, learned_sweet):
         range = numskill*pretest_per_skill + numskill*activity_per_skill + numskill*activity_per_skill
         LOW = np.zeros(range)  # 6 pre-tests, 12 activities, 12 activities' grads
         HIGH = np.ones(range)
@@ -61,11 +59,10 @@ class BKT(Env):
         self.assigned = []
         self.assigned_count = []
         self.state = np.zeros(self.observation_space.shape, dtype=int)
-        # self.penalty = 0.2
-        self.penalty = 0.1
-        self.learned_discount = 0.5
-        self.learned_penalty = 1.5
-        self.learned_sweet = 1
+        self.penalty = penalty
+        self.learned_discount = learned_discount
+        self.learned_penalty = learned_penalty
+        self.learned_sweet = learned_sweet
         self.numskill = numskill
         self.activity_per_skill = activity_per_skill
         self.pre_test_cnt = numskill*pretest_per_skill
@@ -76,12 +73,6 @@ class BKT(Env):
         skill = None
         reward = 0.
         info = {}
-
-        # # if not taken pre test yet, take the test and update the state
-        # if len(self.assigned) == 0:
-        #     # print("start")
-        #     presocres = self.student.takePreTest()
-        #     self.state[0:len(presocres)] = presocres
 
         # check which skill this action belongs
         max_action = self.numskill*self.activity_per_skill

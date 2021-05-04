@@ -60,22 +60,32 @@ class ActorNetwork(nn.Module):
     state -> action distribution
     """
 
-    def __init__(self, n_actions, input_dims, alpha,
-                 fc1_dims=256, fc2_dims=256, chkpt_dir='ppo'):
+    def __init__(self, n_actions, input_dims, alpha, layer_size, chkpt_dir='ppo'):
         super(ActorNetwork, self).__init__()
 
         self.checkpoint_file = os.path.join(chkpt_dir, 'actor_ppo')
-        self.actor = nn.Sequential(
-            nn.Linear(*input_dims, fc1_dims),
-            nn.Dropout(0.2),
-            nn.ReLU(),
-            nn.Linear(fc1_dims, fc2_dims),
-            nn.Dropout(0.2),
-            nn.ReLU(),
-            nn.Linear(fc2_dims, n_actions),
-            nn.Sigmoid(),
-            # nn.Softmax(dim=-1)
-        )
+
+        # self.actor = nn.Sequential(
+        #     nn.Linear(*input_dims, fc1_dims),
+        #     nn.Dropout(0.2),
+        #     nn.ReLU(),
+        #     nn.Linear(fc1_dims, fc2_dims),
+        #     nn.Dropout(0.2),
+        #     nn.ReLU(),
+        #     nn.Linear(fc2_dims, n_actions),
+        #     nn.Sigmoid(),
+        #     # nn.Softmax(dim=-1)
+        # )
+        layer_size.insert(0, input_dims[0])
+        layer = []
+        for i in range(len(layer_size) - 1):
+            layer.append(nn.Linear(layer_size[i], layer_size[i + 1]))
+            layer.append(nn.Dropout(0.2))
+            layer.append(nn.ReLU())
+        layer.append(nn.Linear(layer_size[-1], n_actions))
+        layer.append(nn.Sigmoid())
+        self.actor = nn.Sequential(*layer)
+        # print(self.actor)
         self.softmax = nn.Softmax(dim=-1)
         self.mask = T.ones(n_actions)
         self.mask[-1] = -1
@@ -113,21 +123,29 @@ class CriticNetwork(nn.Module):
     state -> value
     """
 
-    def __init__(self, input_dims, alpha, fc1_dims=256, fc2_dims=256,
-                 chkpt_dir='ppo'):
+    def __init__(self, input_dims, alpha, layer_size, chkpt_dir='ppo'):
         super(CriticNetwork, self).__init__()
 
         self.checkpoint_file = os.path.join(chkpt_dir, 'critic_ppo')
-        self.critic = nn.Sequential(
-            nn.Linear(*input_dims, fc1_dims),
-            nn.Dropout(0.2),
-            nn.ReLU(),
-            nn.Linear(fc1_dims, fc2_dims),
-            nn.Dropout(0.2),
-            nn.ReLU(),
-            nn.Linear(fc2_dims, 1)
-        )
 
+        # self.critic = nn.Sequential(
+        #     nn.Linear(*input_dims, fc1_dims),
+        #     nn.Dropout(0.2),
+        #     nn.ReLU(),
+        #     nn.Linear(fc1_dims, fc2_dims),
+        #     nn.Dropout(0.2),
+        #     nn.ReLU(),
+        #     nn.Linear(fc2_dims, 1)
+        # )
+        layer_size.insert(0, input_dims[0])
+        layer = []
+        for i in range(len(layer_size) - 1):
+            layer.append(nn.Linear(layer_size[i], layer_size[i + 1]))
+            layer.append(nn.Dropout(0.2))
+            layer.append(nn.ReLU())
+        layer.append(nn.Linear(layer_size[-1], 1))
+        self.critic = nn.Sequential(*layer)
+        # print(self.critic)
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
         self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, 200, gamma=0.9)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
@@ -146,15 +164,15 @@ class CriticNetwork(nn.Module):
 
 
 class Agent:
-    def __init__(self, n_actions, input_dims, gamma=0.99, alpha=0.0003, gae_lambda=0.95,
+    def __init__(self, n_actions, input_dims, layer_size, gamma=0.99, alpha=0.0003, gae_lambda=0.95,
                  policy_clip=0.2, batch_size=64, n_epochs=10):
         self.gamma = gamma
         self.policy_clip = policy_clip
         self.n_epochs = n_epochs
         self.gae_lambda = gae_lambda
 
-        self.actor = ActorNetwork(n_actions, input_dims, alpha)
-        self.critic = CriticNetwork(input_dims, alpha)
+        self.actor = ActorNetwork(n_actions, input_dims, alpha, layer_size)
+        self.critic = CriticNetwork(input_dims, alpha, layer_size)
         self.memory = PPOMemory(batch_size)
 
     def remember(self, state, action, probs, vals, reward, done):

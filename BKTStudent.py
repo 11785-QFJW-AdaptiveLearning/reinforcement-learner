@@ -55,7 +55,3 @@ class BKTStudent:
         questions = np.repeat(np.array([i for i in range(self.num_skills)]), self.pretest_per_skill)
         scores = [self.answer(question) for question in questions]
         return np.array(scores).reshape((-1,))
-
-
-# s = BKTStudent(num_skills=3)
-# s.takePreTest()
