@@ -10,8 +10,9 @@ import datetime
 
 
 if __name__ == '__main__':
-    # env = gym.make('CartPole-v0')
-    env = BKT()
+    BKT_param = {'numskill':6, 'activity_per_skill':7, 'pretest_per_skill':3}
+    Agent_param = {}
+    env = BKT(**BKT_param)
     N = 50
     batch_size = 5
     n_epochs = 3
@@ -73,7 +74,7 @@ if __name__ == '__main__':
         print('episode', i, 'score %.1f' % score, 'avg score %.1f' % avg_score,
               'time_steps', n_steps, 'learning_steps', learn_iters)
         print('actions: ', action_list)
-        print('skills: ', np.array(action_list) // 4)
+        print('skills: ', np.array(action_list) // BKT_param['activity_per_skill'])
         print('rewards: ', reward_list)
         print('-' * 50)
     x = [i + 1 for i in range(len(score_history)-99)]
@@ -82,8 +83,9 @@ if __name__ == '__main__':
         'penalty_history': penalty_history,
         'score_history': score_history
     }
+    bkt_path = '_'.join([str(v) for k, v in BKT_param.items()])
     time = datetime.datetime.now().strftime('%m%d%H%M')
-    file_name = f'baseline_penalty2_{time}'
+    file_name = f'lpf/baseline_penalty2_bkt_{bkt_path}_{time}'
     np.save(f'{file_name}.npy', result)
     # plot_learning_curve(x, score_history, figure_file)
     plot_running_curve(x, score_history, post_test_history, penalty_history, f'{file_name}.png')

@@ -1,11 +1,12 @@
 import numpy as np
 from gym import spaces, Env
-from BKTStudent import BKTStudent
+from IRTStudent import IRTStudent
 
-# LOW = np.zeros(6 + 12 + 12)  # 6 pre-tests, 12 activities, 12 activities' grads
-# HIGH = np.ones(6 + 12 + 12)
+LOW = np.zeros(6 + 12 + 12)  # 6 pre-tests, 12 activities, 12 activities' grads
+HIGH = np.ones(6 + 12 + 12)
 
-class BKT(Env):
+
+class IRT(Env):
     """
     Description:
         A student's response with ASSIGNED activities. The student performs under Bayesian Knowledge Tracing
@@ -51,24 +52,17 @@ class BKT(Env):
     --------------------------------------------------------
     """
 
-    def __init__(self, numskill, activity_per_skill, pretest_per_skill):
-        range = numskill*pretest_per_skill + numskill*activity_per_skill + numskill*activity_per_skill
-        LOW = np.zeros(range)  # 6 pre-tests, 12 activities, 12 activities' grads
-        HIGH = np.ones(range)
-        self.student = BKTStudent(num_skills=numskill, pretest_per_skill=pretest_per_skill)
-        self.action_space = spaces.Discrete(numskill*activity_per_skill + 1)
+    def __init__(self):
+        self.student = IRTStudent(num_skills=12)
+        self.action_space = spaces.Discrete(12 + 1)
         self.observation_space = spaces.Box(LOW, HIGH, dtype=np.double)
         self.assigned = []
         self.assigned_count = []
         self.state = np.zeros(self.observation_space.shape, dtype=int)
-        # self.penalty = 0.2
-        self.penalty = 0.1
+        self.penalty = 0.2
         self.learned_discount = 0.5
         self.learned_penalty = 1.5
         self.learned_sweet = 1
-        self.numskill = numskill
-        self.activity_per_skill = activity_per_skill
-        self.pre_test_cnt = numskill*pretest_per_skill
 
     def step(self, action):
         action = int(action)
@@ -84,12 +78,15 @@ class BKT(Env):
         #     self.state[0:len(presocres)] = presocres
 
         # check which skill this action belongs
-        max_action = self.numskill*self.activity_per_skill
-        if action < max_action:
-            skill = action//self.activity_per_skill
+        if action < 4:
+            skill = 0
+        elif action < 8:
+            skill = 1
+        elif action < 12:
+            skill = 2
 
         # if the system assigns an activity to the student
-        if action != max_action and skill is not None:
+        if action != 12 and skill is not None:
             # check if assigned
             if action not in self.assigned:
                 # record the assigned data
@@ -99,17 +96,17 @@ class BKT(Env):
                 # take post activity practice, record the score, update knowledge state
                 self.student.updateKnowledge(skill)
                 # activity type
-                # -------- ???? only assign one activity as test???
-                activity_is_test = 1 if action % self.activity_per_skill == self.activity_per_skill-1 else 0
+                activity_is_test = 1 if action % 4 == 3 else 0
                 activity_score = self.student.answer(skill, activity_is_test)[0]
-                self.state[self.pre_test_cnt + action] = 1
-                self.state[self.pre_test_cnt + max_action + action] = activity_score
+                # self.student.updateKnowledge(activity_score, skill)
+                self.state[6 + action] = 1
+                self.state[18 + action] = activity_score
                 reward = 1.
                 # print(reward)
             else:  # already assigned
                 idx = self.assigned.index(action)
                 # check if learned
-                if self.state[self.pre_test_cnt + max_action + action] == 0:
+                if self.state[18 + action] == 0:
                     # not learned, reduced reward
                     reward = self.learned_discount ** self.assigned_count[idx]
                 else:
@@ -120,12 +117,13 @@ class BKT(Env):
                 self.assigned_count[idx] += 1
 
         # if the system assigns post test to the student
-        elif action == max_action:
+        elif action == 12:
             # print("post")
             done = True
             postsocres = self.student.takePostTest()
             info['postscores'] = np.sum(postsocres)
-            prescores = self.state[0:self.pre_test_cnt]
+            # self.state[18:18 + len(postsocres)] = postsocres
+            prescores = self.state[0:6]
             # reward = 1.0 + np.sum(postsocres - prescores) - (1 + self.penalty) * len(self.assigned)
             # reward = 1.0 + self.learned_sweet * np.sum(np.maximum(postsocres - prescores, 0)) - (1 + self.penalty) * len(self.assigned)
             if len(self.assigned) > 0:
@@ -133,7 +131,6 @@ class BKT(Env):
                          + self.learned_sweet * np.sum(np.maximum(postsocres - prescores, 0)) \
                          - (1 + self.penalty) * len(self.assigned)
             else:
-                # -------- where is 12 come from?????
                 reward = -12 + 2 * np.sum(np.minimum(postsocres - prescores, 0))
             print('pre-test:\t', prescores)
             print('post-test:\t', postsocres)
@@ -151,9 +148,7 @@ class BKT(Env):
         self.state[0:len(presocres)] = presocres
         return self.state
 
-
 # if __name__ == "__main__":
-#     BKT_param = {'numskill': 6, 'activity_per_skill': 7, 'pretest_per_skill': 3}
-#     env = BKT(**BKT_param)
-#     print(env.action_space)
-#     print(env.observation_space)
+#     env = BKT()
+#     env.action_space
+#     env.observation_space
