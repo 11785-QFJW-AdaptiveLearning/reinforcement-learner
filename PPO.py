@@ -82,12 +82,14 @@ class ActorNetwork(nn.Module):
             layer.append(nn.Dropout(0.2))
             layer.append(nn.ReLU())
         layer.append(nn.Linear(layer_size[-1], n_actions))
-        layer.append(nn.Sigmoid())
+        # layer.append(nn.Sigmoid())
         self.actor = nn.Sequential(*layer)
         # print(self.actor)
         self.softmax = nn.Softmax(dim=-1)
-        self.mask = T.ones(n_actions)
-        self.mask[-1] = -1
+        # self.mask = T.ones(n_actions)
+        # self.mask[-1] = -1
+        self.mask = T.arange(n_actions) >= n_actions-1
+        self.n_actions = n_actions
 
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
         self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, 200, gamma=0.9)
@@ -96,19 +98,23 @@ class ActorNetwork(nn.Module):
 
     def forward(self, state):
         dist = self.actor(state)
-        dist = dist * self.mask + self.mask
+        # dist = dist * self.mask + self.mask
+        dist.masked_fill_(self.mask, float('-inf'))
         dist = self.softmax(dist)
         dist = Categorical(dist)
 
         return dist
 
     def updateMask(self, activity, weight=0):
-        self.mask[activity] -= abs(weight)
-        self.mask[-1] = 1
+        # self.mask[activity] -= abs(weight)
+        # self.mask[-1] = 1
         # self.mask[activity] = 0
+        self.mask[activity] = True
+        self.mask[-1] = False
 
     def resetMask(self):
-        self.mask = T.ones(len(self.mask))
+        # self.mask = T.ones(len(self.mask))
+        self.mask = T.arange(self.n_actions) >= self.n_actions - 1
 
     def save_checkpoint(self):
         T.save(self.state_dict(), self.checkpoint_file)
@@ -162,15 +168,16 @@ class CriticNetwork(nn.Module):
 
 
 class Agent:
-    def __init__(self, n_actions, input_dims, layer_size, gamma=0.99, alpha=0.0003, gae_lambda=0.95,
+    def __init__(self, n_actions, input_dims, actor_layer_size, critic_layer_size, gamma=0.99, alpha=0.0003, gae_lambda=0.95,
                  policy_clip=0.2, batch_size=64, n_epochs=10):
         self.gamma = gamma
         self.policy_clip = policy_clip
         self.n_epochs = n_epochs
         self.gae_lambda = gae_lambda
-        layer_size.insert(0, input_dims[0])
-        self.actor = ActorNetwork(n_actions, alpha, layer_size)
-        self.critic = CriticNetwork(alpha, layer_size)
+        actor_layer_size.insert(0, input_dims[0])
+        critic_layer_size.insert(0, input_dims[0])
+        self.actor = ActorNetwork(n_actions, alpha, actor_layer_size)
+        self.critic = CriticNetwork(alpha, critic_layer_size)
         self.memory = PPOMemory(batch_size)
 
     def remember(self, state, action, probs, vals, reward, done):

@@ -90,14 +90,15 @@ class BKT(Env):
                 # take post activity practice, record the score, update knowledge state
                 self.student.updateKnowledge(skill)
                 # activity type
-                # activity_is_test = 1 if action % self.activity_per_skill == self.activity_per_skill-1 else 0
-                activity_is_test = 1 if action % self.activity_per_skill >= 3 else 0
+                activity_is_test = 1 if action % self.activity_per_skill == self.activity_per_skill-1 else 0
                 activity_score = self.student.answer(skill, activity_is_test)[0]
                 self.state[self.pre_test_cnt + action] = 1
                 self.state[self.pre_test_cnt + max_action + action] = activity_score
                 reward = 1.
                 # print(reward)
             else:  # already assigned
+                raise Warning("already assigned")
+                print('======================= already assigned!')
                 idx = self.assigned.index(action)
                 # check if learned
                 if self.state[self.pre_test_cnt + max_action + action] == 0:
@@ -124,6 +125,8 @@ class BKT(Env):
                          + self.learned_sweet * np.sum(np.maximum(postsocres - prescores, 0)) \
                          - (1 + self.penalty) * len(self.assigned)
             else:
+                raise Warning("only post test")
+                print('^^^^^^^^^^^^^^^^^^^^^^^ only post test!')
                 reward = -(max_action) + 2 * np.sum(np.minimum(postsocres - prescores, 0))
             print('pre-test:\t', prescores)
             print('post-test:\t', postsocres)
