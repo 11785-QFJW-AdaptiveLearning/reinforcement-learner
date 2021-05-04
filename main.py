@@ -12,7 +12,7 @@ import datetime
 if __name__ == '__main__':
     BKT_param = {'numskill':6, 'activity_per_skill':7, 'pretest_per_skill':3,
                  'penalty':0.1, 'learned_discount':0.5, 'learned_penalty':1.5, 'learned_sweet':1}
-    Agent_layer_size = [256, 256, 128]
+    Agent_layer_size = [256, 256]
     env = BKT(**BKT_param)
     N = 50
     batch_size = 5

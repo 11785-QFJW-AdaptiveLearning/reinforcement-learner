@@ -91,7 +91,8 @@ class BKT(Env):
                 self.student.updateKnowledge(skill)
                 # activity type
                 # -------- ???? only assign one activity as test???
-                activity_is_test = 1 if action % self.activity_per_skill == self.activity_per_skill-1 else 0
+                # activity_is_test = 1 if action % self.activity_per_skill == self.activity_per_skill-1 else 0
+                activity_is_test = 1 if action % self.activity_per_skill >= 3 else 0
                 activity_score = self.student.answer(skill, activity_is_test)[0]
                 self.state[self.pre_test_cnt + action] = 1
                 self.state[self.pre_test_cnt + max_action + action] = activity_score
