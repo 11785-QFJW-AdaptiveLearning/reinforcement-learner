@@ -2,6 +2,7 @@ import numpy as np
 from gym import spaces, Env
 from BKTStudent import BKTStudent
 
+
 class BKT(Env):
     """
     Description:
@@ -49,12 +50,12 @@ class BKT(Env):
     """
 
     def __init__(self, numskill, activity_per_skill, pretest_per_skill,
-                 penalty, learned_discount, learned_penalty, learned_sweet):
-        range = numskill*pretest_per_skill + numskill*activity_per_skill + numskill*activity_per_skill
+                 penalty, learned_discount, learned_penalty, learned_sweet, p_L):
+        range = numskill * pretest_per_skill + numskill * activity_per_skill + numskill * activity_per_skill
         LOW = np.zeros(range)  # 6 pre-tests, 12 activities, 12 activities' grads
         HIGH = np.ones(range)
-        self.student = BKTStudent(num_skills=numskill, pretest_per_skill=pretest_per_skill)
-        self.action_space = spaces.Discrete(numskill*activity_per_skill + 1)
+        self.student = BKTStudent(num_skills=numskill, pretest_per_skill=pretest_per_skill, p_L=p_L)
+        self.action_space = spaces.Discrete(numskill * activity_per_skill + 1)
         self.observation_space = spaces.Box(LOW, HIGH, dtype=np.double)
         self.assigned = []
         self.assigned_count = []
@@ -65,7 +66,7 @@ class BKT(Env):
         self.learned_sweet = learned_sweet
         self.numskill = numskill
         self.activity_per_skill = activity_per_skill
-        self.pre_test_cnt = numskill*pretest_per_skill
+        self.pre_test_cnt = numskill * pretest_per_skill
 
     def step(self, action):
         action = int(action)
@@ -75,9 +76,9 @@ class BKT(Env):
         info = {}
 
         # check which skill this action belongs
-        max_action = self.numskill*self.activity_per_skill
+        max_action = self.numskill * self.activity_per_skill
         if action < max_action:
-            skill = action//self.activity_per_skill
+            skill = action // self.activity_per_skill
 
         # if the system assigns an activity to the student
         if action != max_action and skill is not None:
@@ -90,7 +91,7 @@ class BKT(Env):
                 # take post activity practice, record the score, update knowledge state
                 self.student.updateKnowledge(skill)
                 # activity type
-                activity_is_test = 1 if action % self.activity_per_skill == self.activity_per_skill-1 else 0
+                activity_is_test = 1 if action % self.activity_per_skill == self.activity_per_skill - 1 else 0
                 activity_score = self.student.answer(skill, activity_is_test)[0]
                 self.state[self.pre_test_cnt + action] = 1
                 self.state[self.pre_test_cnt + max_action + action] = activity_score
@@ -143,7 +144,6 @@ class BKT(Env):
         presocres = self.student.takePreTest()
         self.state[0:len(presocres)] = presocres
         return self.state
-
 
 # if __name__ == "__main__":
 #     BKT_param = {'numskill': 6, 'activity_per_skill': 7, 'pretest_per_skill': 3}

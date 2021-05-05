@@ -1,8 +1,9 @@
 import numpy as np
 from utils import *
 
-linear = np.load('result_plot/linear_assign_bkt_3_4_2_0.1_0.5_1.5_1_05042059.npy', allow_pickle=True).item()
-rs = np.load('result_plot/baseline_bkt_3_4_2_0.1_0.5_1.5_1_actor_30@256@256_critic_30@256@256_05042056.npy', allow_pickle=True).item()
+linear = np.load('result_plot/linear_assign_bkt_3_4_2_0.1_0.1_0.5_1.5_1_05051627.npy', allow_pickle=True).item()
+rs = np.load('result_plot/baseline_bkt_3_4_2_0.1_0.1_0.5_1.5_1_actor_30@64@64@64_critic_30@256@256_05051657.npy',
+             allow_pickle=True).item()
 
 linear_running_rewards = cal_running_avg(linear['score_history'])
 linear_running_postscores = cal_running_avg(linear['post_test_history'])
@@ -19,4 +20,18 @@ plt.plot(x, rs_running_postscores, color='lightgreen', label='rs post scores')
 plt.plot(x, rs_running_penalty, color='lightcoral', label='rs penalty')
 plt.legend()
 plt.title('Running average of previous 100 data')
-plt.savefig('result_plot/compare_05042059&05042056.png')
+plt.savefig('result_plot/compare_05051627&05051657.png')
+plt.show()
+
+linear_rewards_mean = np.mean(linear['score_history'][-1000:])
+linear_postscores_mean = np.mean(linear['post_test_history'][-1000:])
+linear_penalty_mean = np.mean(linear['penalty_history'][-1000:])
+rs_rewards_mean = np.mean(rs['score_history'][-1000:])
+rs_postscores_mean = np.mean(rs['post_test_history'][-1000:])
+rs_penalty_mean = np.mean(rs['penalty_history'][-1000:])
+print("linear_rewards_mean: ", linear_rewards_mean)
+print("linear_postscores_mean: ", linear_postscores_mean)
+print("linear_penalty_mean: ", linear_penalty_mean)
+print("rs_rewards_mean: ", rs_rewards_mean)
+print("rs_postscores_mean: ", rs_postscores_mean)
+print("rs_penalty_mean: ", rs_penalty_mean)
