@@ -88,13 +88,14 @@ class ActorNetwork(nn.Module):
         self.softmax = nn.Softmax(dim=-1)
         # self.mask = T.ones(n_actions)
         # self.mask[-1] = -1
-        self.mask = T.arange(n_actions) >= n_actions-1
-        self.n_actions = n_actions
 
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
         self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, 200, gamma=0.9)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
         self.to(self.device)
+
+        self.mask = (T.arange(n_actions) >= n_actions - 1).to(self.device)
+        self.n_actions = n_actions
 
     def forward(self, state):
         dist = self.actor(state)
@@ -114,7 +115,8 @@ class ActorNetwork(nn.Module):
 
     def resetMask(self):
         # self.mask = T.ones(len(self.mask))
-        self.mask = T.arange(self.n_actions) >= self.n_actions - 1
+        self.mask = self.mask.fill_(False)
+        self.mask[-1] = True
 
     def save_checkpoint(self):
         T.save(self.state_dict(), self.checkpoint_file)
@@ -198,8 +200,8 @@ class Agent:
 
         dist = self.actor(state)
         value = self.critic(state)
-        # action = dist.sample()
-        action = T.squeeze(dist.probs).argmax()
+        action = dist.sample()
+        # action = T.squeeze(dist.probs).argmax()
 
         probs = T.squeeze(dist.log_prob(action)).item()
         action = T.squeeze(action).item()
