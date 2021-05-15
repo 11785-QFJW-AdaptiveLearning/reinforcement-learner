@@ -9,8 +9,8 @@ import datetime
 
 
 if __name__ == '__main__':
-    BKT_param = {'numskill': 3, 'activity_per_skill': 4, 'pretest_per_skill': 2, 'p_L': 0.1,
-                 'penalty': 0.1, 'learned_discount': 0.5, 'learned_penalty': 1.5, 'learned_sweet': 1}
+    BKT_param = {'numskill': 5, 'activity_per_skill': 4, 'pretest_per_skill': 5, 'p_L': 0.5,
+                 'penalty': 0.1, 'learned_discount': 0.8, 'learned_penalty': 1.5, 'learned_sweet': 1}
     env = BKT(**BKT_param)
     N = 50
     n_games = 5000

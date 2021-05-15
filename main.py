@@ -10,9 +10,9 @@ import datetime
 
 
 if __name__ == '__main__':
-    BKT_param = {'numskill': 3, 'activity_per_skill': 4, 'pretest_per_skill': 2, 'p_L': 0.1,
-                 'penalty': 0.1, 'learned_discount': 0.5, 'learned_penalty': 1.5, 'learned_sweet': 1}
-    actor_layer_size = [64, 64, 64]
+    BKT_param = {'numskill': 5, 'activity_per_skill': 4, 'pretest_per_skill': 5, 'p_L': 0.5,
+                 'penalty': 0.1, 'learned_discount': 0.8, 'learned_penalty': 1.5, 'learned_sweet': 1}
+    actor_layer_size = [256, 256]
     critic_layer_size = [256, 256]
     env = BKT(**BKT_param)
     N = 50
@@ -63,7 +63,7 @@ if __name__ == '__main__':
         agent.resetMask()
         post_test_history.append(info['postscores'])
         score = np.array(score)
-        penalty_history.append(np.sum(score[score < 0]))
+        penalty_history.append(score[-1])
         score = np.sum(score)
         score_history.append(score)
 

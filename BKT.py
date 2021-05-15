@@ -67,6 +67,7 @@ class BKT(Env):
         self.numskill = numskill
         self.activity_per_skill = activity_per_skill
         self.pre_test_cnt = numskill * pretest_per_skill
+        self.pretest_per_skill = pretest_per_skill
 
     def step(self, action):
         action = int(action)
@@ -93,9 +94,14 @@ class BKT(Env):
                 # activity type
                 activity_is_test = 1 if action % self.activity_per_skill == self.activity_per_skill - 1 else 0
                 activity_score = self.student.answer(skill, activity_is_test)[0]
+                reward = self.learned_discount ** (
+                            np.mean(self.state[skill * self.pretest_per_skill:(skill + 1) * self.pretest_per_skill])
+                            + np.sum(self.state[self.pre_test_cnt + max_action + skill * self.activity_per_skill:
+                                                self.pre_test_cnt + max_action + (skill + 1) * self.activity_per_skill]))
+
                 self.state[self.pre_test_cnt + action] = 1
                 self.state[self.pre_test_cnt + max_action + action] = activity_score
-                reward = 1.
+                # reward = 1.
                 # print(reward)
             else:  # already assigned
                 raise Warning("already assigned")
